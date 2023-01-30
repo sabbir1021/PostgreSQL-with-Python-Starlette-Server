@@ -1,5 +1,6 @@
 import psycopg2
 import psycopg2.extras
+from paginations import pagination
 
 def db_connect():
    conn = psycopg2.connect(
@@ -8,14 +9,47 @@ def db_connect():
    return conn
 
 
-def view(sql, data_type='all'):
+def view_all(sql, table, page_size, page):
+   conn = db_connect()
+   cursor = conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
+   
+   # count
+   count_sql = """SELECT COUNT(*) FROM {};""".format(table)
+   cursor.execute(count_sql)
+   count = cursor.fetchone().get('count')
+
+   # pagination 
+   pagination_data = pagination(page_size, page, count)
+   sql = sql+pagination_data.get('query')
+
+   # Query
+   cursor.execute(sql)
+   all_data = cursor.fetchall()
+
+   
+   data = {}
+   meta_data = {
+      "total": count,
+      "page_size": pagination_data.get('page_size'),
+      "page": pagination_data.get('page'),
+      "next_page": pagination_data.get('next_page'),
+      "previous_page" : pagination_data.get('previous_page')
+   }
+   data['success'] = True
+   data['meta_data'] = meta_data
+   data['data'] = all_data
+   conn.close()
+   return data
+
+
+def view_details(sql, data_type='all'):
    conn = db_connect()
    cursor = conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
    cursor.execute(sql)
-   if data_type == "one":
-      data = cursor.fetchone()
-   else:
-      data = cursor.fetchall()
+   get_data = cursor.fetchone()
+   data = {}
+   data['success'] = True
+   data['data'] = get_data
    conn.close()
    return data
 
