@@ -28,9 +28,11 @@ async def user_create_list(request):
         username = request_data.get('username')
         phone = request_data.get('phone')
         email = request_data.get('email')
-        data = create(""" INSERT INTO users(username, phone, email) VALUES ('{}','{}', '{}')""".format(username,phone,email))
+        values = (username, phone, email)
+        query = """INSERT INTO users(username, phone, email) VALUES (%s,%s,%s) RETURNING id, username, phone, email"""
+        data = create(query, values)
     
-    return JSONResponse({'data': data})
+    return JSONResponse(data)
 
 
 async def user_retrieve_update(request):

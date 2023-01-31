@@ -22,9 +22,7 @@ def view_all(sql, table, page_size=None, page=None, search=None, search_fields=N
             search_field_text = search_field_text + f"UPPER({search_fields[i]}) LIKE '%{search}%' OR "
          else:
             search_field_text = search_field_text + f"UPPER({search_fields[i]}) LIKE '%{search}%' "
-      print(search_field_text)
 
-      # q = f"WHERE UPPER(name) LIKE '%{search}%' OR id LIKE '%{search}%'"
       q = f" WHERE {search_field_text}"
       sql = sql+q
    else:
@@ -79,13 +77,18 @@ def view_details(sql, data_type='all'):
    return data
 
 
-def create(sql):
+def create(query, values):
    conn = db_connect()
-   cursor = conn.cursor()
-   cursor.execute(sql)
+   cursor = conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
+   try:
+      cursor.execute(query, values)
+      data = cursor.fetchone()
+   except Exception as e:
+      conn.close()
+      return {"message": str(e), "status": 400}
    conn.commit()
    conn.close()
-   return {"message": "Created"}
+   return {"message": "Created", "data": data }
 
 
 def update(sql):
