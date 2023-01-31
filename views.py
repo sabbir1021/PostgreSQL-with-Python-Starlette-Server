@@ -13,7 +13,15 @@ async def homepage(request):
 
 async def user_create_list(request):
     if request.method == "GET":
-        data = view("""select * from users;""")
+        page_size = request.query_params.get('page_size')
+        page = request.query_params.get('page')
+        search = request.query_params.get('search')
+        search_fields = ['username', 'email']
+        query = """select * from users"""
+        table = "users"
+        data = view_all(query, table, page_size, page, search, search_fields)
+        if data.get('status') != 200:
+            return JSONResponse(data)
 
     if request.method == "POST":
         request_data = await request.json()
@@ -54,13 +62,16 @@ async def blog_category_create_list(request):
     if request.method == "GET":
         page_size = request.query_params.get('page_size')
         page = request.query_params.get('page')
+        search = request.query_params.get('search')
+        search_fields = ['name']
         query = """select blog_categories.id, blog_categories.name, blog_categories.show_in, users.id as created_by_id,
             users.username as created_by_username, users.email as created_by_email, users.phone as created_by_phone
             from blog_categories
-            inner join users on blog_categories.created_by = users.id
-            """
+            inner join users on blog_categories.created_by = users.id"""
         table = "blog_categories"
-        data = view_all(query, table, page_size, page)
+        data = view_all(query, table, page_size, page, search, search_fields)
+        if data.get('status') != 200:
+            return JSONResponse(data)
 
         for i in data.get('data'):
             user = {}
@@ -98,6 +109,6 @@ async def blog_category_retrieve_update(request):
 
 
         sql_text = f"UPDATE blog_categories SET {change_data[0:-2]} WHERE blog_categories.id = {category_id};"
-        data = create("""{}""".format(sql_text))
+        data = update("""{}""".format(sql_text))
     
     return JSONResponse(data)

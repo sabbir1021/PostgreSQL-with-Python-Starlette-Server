@@ -9,19 +9,44 @@ def db_connect():
    return conn
 
 
-def view_all(sql, table, page_size, page):
+def view_all(sql, table, page_size=None, page=None, search=None, search_fields=None):
    conn = db_connect()
    cursor = conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
+
+   # search
+   if search:
+      search = search.upper()
+      search_field_text = ""
+      for i in range(0,len(search_fields)):
+         if i != len(search_fields) - 1:
+            search_field_text = search_field_text + f"UPPER({search_fields[i]}) LIKE '%{search}%' OR "
+         else:
+            search_field_text = search_field_text + f"UPPER({search_fields[i]}) LIKE '%{search}%' "
+      print(search_field_text)
+
+      # q = f"WHERE UPPER(name) LIKE '%{search}%' OR id LIKE '%{search}%'"
+      q = f" WHERE {search_field_text}"
+      sql = sql+q
+   else:
+      q = ""
    
    # count
-   count_sql = """SELECT COUNT(*) FROM {};""".format(table)
+   count_sql = """SELECT COUNT(*) FROM {} """.format(table)
+   count_sql = count_sql + q
    cursor.execute(count_sql)
    count = cursor.fetchone().get('count')
 
    # pagination 
    pagination_data = pagination(page_size, page, count)
+   
+   # Error check
+   if pagination_data.get('status') !=200:
+      return pagination_data
+
    sql = sql+pagination_data.get('query')
 
+
+   print(sql)
    # Query
    cursor.execute(sql)
    all_data = cursor.fetchall()
@@ -60,7 +85,7 @@ def create(sql):
    cursor.execute(sql)
    conn.commit()
    conn.close()
-   return {"message": "created"}
+   return {"message": "Created"}
 
 
 def update(sql):
@@ -69,4 +94,4 @@ def update(sql):
    cursor.execute(sql)
    conn.commit()
    conn.close()
-   return {"message": "created"}
+   return {"message": "Updated"}

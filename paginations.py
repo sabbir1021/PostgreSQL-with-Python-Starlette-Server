@@ -3,21 +3,21 @@ import math
 
 
 def pagination(page_size, page, count):
-    if page_size:
-        page_size = int(page_size)
-    else:
-        page_size = 0
-    if page:
-        page = int(page)
-    else:
-        page = 0
+    try:
+        page_size = int(page_size) if page_size  else 0
+    except:
+        return {'message': "Invalid Page", "status": 400}
+    try:
+        page = int(page) if page else 0
+    except:
+        return {'message': "Invalid Page", "status": 400}
     
     if page_size and page:
         offset = page_size * (page-1)
-        query = f"LIMIT {page_size} OFFSET {offset}"
+        query = f" LIMIT {page_size} OFFSET {offset}"
     else:
         if page_size != 0 and page == 0:
-            query = f"LIMIT {page_size}"
+            query = f" LIMIT {page_size}"
         else:
             query = ""
     
@@ -25,29 +25,36 @@ def pagination(page_size, page, count):
 
     if page_size == 0:
         total_page = 1
+
     else:
         total_page = math.ceil(count/page_size)
+    
+    # validation
+    if total_page < page:
+        return {'message': "Page number is over", "status": 400}
+
     if page > 1 and page < total_page:
         next_page = page + 1
         previous_page = page - 1
     elif page == 1 and total_page == 1:
-        next_page = 0
-        previous_page = 0
+        next_page = None
+        previous_page = None
     elif page == 1 and total_page > 1:
         next_page = page + 1
-        previous_page = 0
+        previous_page = None
     elif page == total_page and total_page > 1:
-        next_page = 0
+        next_page = None
         previous_page = page - 1
     else:
-        next_page = 0
-        previous_page = 0
+        next_page = None
+        previous_page = None
 
     data = {
         'query' : query,
         'page_size': page_size,
         'page': page,
         'next_page': next_page,
-        'previous_page': previous_page
+        'previous_page': previous_page,
+        'status': 200
     }
     return data
