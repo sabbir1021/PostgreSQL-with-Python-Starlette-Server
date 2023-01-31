@@ -36,7 +36,7 @@ async def user_create_list(request):
 async def user_retrieve_update(request):
     if request.method == "GET":
         user_id = request.path_params['user_id']
-        data = view("""select * from users WHERE users.id = {};""".format(user_id), 'one')
+        data = view_details("""select * from users WHERE users.id = {};""".format(user_id))
 
     if request.method == "PATCH":
         user_id = request.path_params['user_id']
@@ -51,7 +51,7 @@ async def user_retrieve_update(request):
 
 
         sql_text = f"UPDATE users SET {change_data[0:-2]} WHERE users.id = {user_id};"
-        data = create("""{}""".format(sql_text))
+        data = update("""{}""".format(sql_text))
     
     return JSONResponse({'data': data})
 
