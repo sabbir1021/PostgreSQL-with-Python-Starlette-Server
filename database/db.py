@@ -1,6 +1,6 @@
 import psycopg2
 import psycopg2.extras
-from paginations import pagination
+from base.paginations import pagination
 
 def db_connect():
    conn = psycopg2.connect(

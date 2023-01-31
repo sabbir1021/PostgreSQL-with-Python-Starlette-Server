@@ -1,6 +1,6 @@
 from starlette.responses import JSONResponse
 from starlette.responses import Response
-from db import db_connect, view_all, view_details, create, update
+from database.db import db_connect, view_all, view_details, create, update
 import json
 
 
