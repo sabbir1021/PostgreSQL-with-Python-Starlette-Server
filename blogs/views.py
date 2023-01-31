@@ -1,6 +1,6 @@
 from starlette.responses import JSONResponse
 from starlette.responses import Response
-from database.db import db_connect, view_all, view_details, create, update
+from database.db import view_all, view_details, create, update
 import json
 
 
@@ -51,11 +51,11 @@ async def user_retrieve_update(request):
             else:
                 change_data = change_data + key + " = " + f"{value}" + ", "
 
-
+        print(change_data)
         sql_text = f"UPDATE users SET {change_data[0:-2]} WHERE users.id = {user_id};"
         data = update("""{}""".format(sql_text))
     
-    return JSONResponse({'data': data})
+    return JSONResponse(data)
 
 
 # Category

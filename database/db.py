@@ -16,14 +16,8 @@ def view_all(sql, table, page_size=None, page=None, search=None, search_fields=N
    # search
    if search:
       search = search.upper()
-      search_field_text = ""
-      for i in range(0,len(search_fields)):
-         if i != len(search_fields) - 1:
-            search_field_text = search_field_text + f"UPPER({search_fields[i]}) LIKE '%{search}%' OR "
-         else:
-            search_field_text = search_field_text + f"UPPER({search_fields[i]}) LIKE '%{search}%' "
-
-      q = f" WHERE {search_field_text}"
+      search_field_text = ' OR '.join([f"UPPER({x}) LIKE '%{search}%'" for x in search_fields])
+      q = f" WHERE {search_field_text} "
       sql = sql+q
    else:
       q = ""
@@ -93,8 +87,13 @@ def create(query, values):
 
 def update(sql):
    conn = db_connect()
-   cursor = conn.cursor()
-   cursor.execute(sql)
+   cursor = conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
+   try:
+      cursor.execute(sql)
+   except Exception as e:
+      conn.close()
+      return {"message": str(e), "status": 400}
+
    conn.commit()
    conn.close()
    return {"message": "Updated"}
