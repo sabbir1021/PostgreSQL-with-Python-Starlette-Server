@@ -21,7 +21,9 @@ async def user_create_list(request):
         table = "users"
         data = view_all(query, table, page_size, page, search, search_fields)
         if data.get('status') != 200:
-            return JSONResponse(data)
+            return JSONResponse(data, status_code=400)
+        else:
+            return JSONResponse(data, status_code=200)
 
     if request.method == "POST":
         request_data = await request.json()
@@ -31,8 +33,9 @@ async def user_create_list(request):
         values = (username, phone, email)
         query = """INSERT INTO users(username, phone, email) VALUES (%s,%s,%s) RETURNING id, username, phone, email"""
         data = create(query, values)
+        return JSONResponse(data, status_code=201)
     
-    return JSONResponse(data)
+    # return JSONResponse(data)
 
 
 async def user_retrieve_update(request):
@@ -55,7 +58,7 @@ async def user_retrieve_update(request):
         sql_text = f"UPDATE users SET {change_data[0:-2]} WHERE users.id = {user_id};"
         data = update("""{}""".format(sql_text))
     
-    return JSONResponse(data)
+    return JSONResponse(data, status_code=201)
 
 
 # Category
