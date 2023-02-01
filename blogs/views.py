@@ -66,15 +66,21 @@ async def blog_category_create_list(request):
         page = request.query_params.get('page')
         search = request.query_params.get('search')
         search_fields = ['name']
+        # created_by = request.query_params.get('created_by')
+        # filter_fields = {'created_by': created_by}
+        
         query = """select blog_categories.id, blog_categories.name, blog_categories.show_in, users.id as created_by_id,
             users.username as created_by_username, users.email as created_by_email, users.phone as created_by_phone
             from blog_categories
             inner join users on blog_categories.created_by = users.id"""
         table = "blog_categories"
         data = view_all(query, table, page_size, page, search, search_fields)
+        
         if data.get('status') != 200:
-            return JSONResponse(data)
-
+            data.pop('status')
+            return JSONResponse(data, status_code=400)
+        else:
+            data.pop('status')
         for i in data.get('data'):
             user = {}
             user['id'] = i.pop("created_by_id")
@@ -89,8 +95,7 @@ async def blog_category_create_list(request):
         created_by = request_data.get('created_by')
         show_in = request_data.get('show_in')
         data = create(""" INSERT INTO blog_categories(name, created_by, show_in) VALUES ('{}','{}', '{}')""".format(name,created_by, show_in))
-    
-    return JSONResponse(data)
+    return JSONResponse(data, status_code=200)
 
 
 async def blog_category_retrieve_update(request):

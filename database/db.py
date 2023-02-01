@@ -9,22 +9,31 @@ def db_connect():
    return conn
 
 
-def view_all(sql, table, page_size=None, page=None, search=None, search_fields=None):
+def view_all(sql, table, page_size=None, page=None, search=None, search_fields=None, filter_fields=None):
    conn = db_connect()
    cursor = conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
 
+   count_sql = """SELECT COUNT(*) FROM {} """.format(table)
+
+   # Filter 
+   if filter_fields:
+      filter_field_text = ' AND '.join([f"{table}.{key} = {values}" for key,values in filter_fields.items()])
+      q = f" WHERE {filter_field_text} AND "
+      sql = sql + q
+      count_sql = count_sql + q
+   
    # search
    if search:
       search = search.upper()
       search_field_text = ' OR '.join([f"UPPER({x}) LIKE '%{search}%'" for x in search_fields])
-      q = f" WHERE {search_field_text} "
+      if filter_fields:
+         q = f" {search_field_text} "
+      else:
+         q = f" WHERE {search_field_text} "
       sql = sql+q
-   else:
-      q = ""
+      count_sql = count_sql + q
    
    # count
-   count_sql = """SELECT COUNT(*) FROM {} """.format(table)
-   count_sql = count_sql + q
    cursor.execute(count_sql)
    count = cursor.fetchone().get('count')
 
@@ -36,6 +45,7 @@ def view_all(sql, table, page_size=None, page=None, search=None, search_fields=N
       conn.close()
       return pagination_data
    sql = sql+pagination_data.get('query')
+   print(sql)
 
    # Main Query
    cursor.execute(sql)
@@ -50,6 +60,7 @@ def view_all(sql, table, page_size=None, page=None, search=None, search_fields=N
       "previous_page" : pagination_data.get('previous_page')
    }
    data['success'] = True
+   data['status'] = 200
    data['meta_data'] = meta_data
    data['data'] = all_data
    conn.close()
