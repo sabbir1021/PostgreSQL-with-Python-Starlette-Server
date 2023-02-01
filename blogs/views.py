@@ -189,3 +189,79 @@ async def blog_tag_retrieve_update(request):
         data = update("""{}""".format(sql_text))
     
     return JSONResponse(data, status_code=200)
+
+
+# Blog 
+
+async def blog_create_list(request):
+    if request.method == "GET":
+        page_size = request.query_params.get('page_size')
+        page = request.query_params.get('page')
+        search = request.query_params.get('search')
+        search_fields = ['name']
+        # created_by = request.query_params.get('created_by')
+        # filter_fields = {'created_by': created_by}
+        
+        query = """select blogs.id, blogs.title, blogs.description, blogs.thumbnail, TO_CHAR(blogs.publish_date, 'YYYY-MM-DD HH24:MI:SS') as publish_date, blogs.show_in, blog_categories.id as category_id, blog_categories.name as category_name, users.id as created_by_id,
+            users.username as created_by_username, users.email as created_by_email, users.phone as created_by_phone
+            from blogs
+            inner join users on blogs.created_by = users.id
+            inner join blog_categories on blogs.category = blog_categories.id"""
+        table = "blogs"
+        data = view_all(query, table, page_size, page, search, search_fields)
+        
+        if data.get('status') != 200:
+            data.pop('status')
+            return JSONResponse(data, status_code=400)
+        else:
+            data.pop('status')
+        for i in data.get('data'):
+            category = {}
+            category['id'] = i.pop("category_id")
+            category['name'] = i.pop("category_name")
+            i['category'] = category
+            user = {}
+            user['id'] = i.pop("created_by_id")
+            user['username'] = i.pop("created_by_username")
+            user['email'] = i.pop("created_by_email")
+            user['phone'] = i.pop("created_by_phone")
+            i['created_by'] = user
+
+
+    if request.method == "POST":
+        request_data = await request.json()
+        title = request_data.get('title')
+        description = request_data.get('description')
+        thumbnail = request_data.get('thumbnail')
+        category = request_data.get('category')
+        created_by = request_data.get('created_by')
+        show_in = request_data.get('show_in')
+        publish_date = request_data.get('publish_date')
+        
+        values = (title, description, thumbnail, category, created_by, show_in, publish_date)
+        query = """INSERT INTO blogs(title, description, thumbnail, category, created_by, show_in, publish_date) VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id, title, description, thumbnail"""
+        data = create(query, values)
+    return JSONResponse(data, status_code=200)
+
+
+async def blog_retrieve_update(request):
+    if request.method == "GET":
+        tag_id = request.path_params['tag_id']
+        data = view_details("""select * from blog_tags WHERE blog_tags.id = {};""".format(tag_id))
+
+    if request.method == "PATCH":
+        tag_id = request.path_params['tag_id']
+        request_data = await request.json()
+
+        change_data = ""
+        for key, value in request_data.items():
+            if isinstance(value, str):
+                change_data = change_data + key + " = " + f"'{value}'" + ", "
+            else:
+                change_data = change_data + key + " = " + f"{value}" + ", "
+
+
+        sql_text = f"UPDATE blog_tags SET {change_data[0:-2]} WHERE blog_tags.id = {tag_id};"
+        data = update("""{}""".format(sql_text))
+    
+    return JSONResponse(data, status_code=200)
