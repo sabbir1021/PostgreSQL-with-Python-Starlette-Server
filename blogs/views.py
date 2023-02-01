@@ -171,7 +171,18 @@ async def blog_tag_create_list(request):
 async def blog_tag_retrieve_update(request):
     if request.method == "GET":
         tag_id = request.path_params['tag_id']
-        data = view_details("""select * from blog_tags WHERE blog_tags.id = {};""".format(tag_id))
+        query = """select blog_tags.id, blog_tags.name, blog_tags.show_in, users.id as created_by_id,
+            users.username as created_by_username, users.email as created_by_email, users.phone as created_by_phone
+            from blog_tags
+            inner join users on blog_tags.created_by = users.id 
+            WHERE blog_tags.id = {}""".format(tag_id)
+        data = view_details(query)
+        user = {}
+        user['id'] = data.get('data').pop("created_by_id")
+        user['username'] = data.get('data').pop("created_by_username")
+        user['email'] = data.get('data').pop("created_by_email")
+        user['phone'] = data.get('data').pop("created_by_phone")
+        data.get('data')['created_by'] = user
 
     if request.method == "PATCH":
         tag_id = request.path_params['tag_id']
@@ -246,11 +257,28 @@ async def blog_create_list(request):
 
 async def blog_retrieve_update(request):
     if request.method == "GET":
-        tag_id = request.path_params['tag_id']
-        data = view_details("""select * from blog_tags WHERE blog_tags.id = {};""".format(tag_id))
+        blog_id = request.path_params['blog_id']
+        query = """select  blogs.id, blogs.title, blogs.description, blogs.thumbnail, TO_CHAR(blogs.publish_date, 'YYYY-MM-DD HH24:MI:SS') as publish_date, blogs.show_in, blog_categories.id as category_id, blog_categories.name as category_name, users.id as created_by_id,
+            users.username as created_by_username, users.email as created_by_email, users.phone as created_by_phone
+            from blogs
+            inner join users on blogs.created_by = users.id
+            inner join blog_categories on blogs.category = blog_categories.id
+            WHERE blogs.id = {}""".format(blog_id)
+        data = view_details(query)
+        category = {}
+        category['id'] = data.get('data').pop("category_id")
+        category['name'] = data.get('data').pop("category_name")
+        data.get('data')['category'] = category
+        user = {}
+        user['id'] = data.get('data').pop("created_by_id")
+        user['username'] = data.get('data').pop("created_by_username")
+        user['email'] = data.get('data').pop("created_by_email")
+        user['phone'] = data.get('data').pop("created_by_phone")
+        data.get('data')['created_by'] = user
+
 
     if request.method == "PATCH":
-        tag_id = request.path_params['tag_id']
+        blog_id = request.path_params['blog_id']
         request_data = await request.json()
 
         change_data = ""
@@ -261,7 +289,7 @@ async def blog_retrieve_update(request):
                 change_data = change_data + key + " = " + f"{value}" + ", "
 
 
-        sql_text = f"UPDATE blog_tags SET {change_data[0:-2]} WHERE blog_tags.id = {tag_id};"
+        sql_text = f"UPDATE blogs SET {change_data[0:-2]} WHERE blogs.id = {blog_id};"
         data = update("""{}""".format(sql_text))
     
     return JSONResponse(data, status_code=200)
