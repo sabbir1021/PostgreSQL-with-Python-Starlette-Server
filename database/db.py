@@ -18,7 +18,7 @@ def view_all(sql, table, page_size=None, page=None, search=None, search_fields=N
    # Filter 
    if filter_fields:
       filter_field_text = ' AND '.join([f"{table}.{key} = {values}" for key,values in filter_fields.items()])
-      q = f" WHERE {filter_field_text} AND "
+      q = f" WHERE {filter_field_text} AND " if search else f" WHERE {filter_field_text} "
       sql = sql + q
       count_sql = count_sql + q
    
@@ -26,10 +26,7 @@ def view_all(sql, table, page_size=None, page=None, search=None, search_fields=N
    if search:
       search = search.upper()
       search_field_text = ' OR '.join([f"UPPER({x}) LIKE '%{search}%'" for x in search_fields])
-      if filter_fields:
-         q = f" {search_field_text} "
-      else:
-         q = f" WHERE {search_field_text} "
+      q = f" {search_field_text} " if filter_fields else f" WHERE {search_field_text} "
       sql = sql+q
       count_sql = count_sql + q
    
