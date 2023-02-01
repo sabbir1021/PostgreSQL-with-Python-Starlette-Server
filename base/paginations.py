@@ -1,7 +1,5 @@
 import math
 
-
-
 def pagination(page_size, page, count):
     try:
         page_size = int(page_size) if page_size  else 0
@@ -21,11 +19,9 @@ def pagination(page_size, page, count):
         else:
             query = ""
     
-    # next previous
-
+    # Page Calculation
     if page_size == 0:
         total_page = 1
-
     else:
         total_page = math.ceil(count/page_size)
     
@@ -33,6 +29,7 @@ def pagination(page_size, page, count):
     if total_page < page:
         return {'message': "Page number is over", "status": 400}
 
+    # next previous
     if page > 1 and page < total_page:
         next_page = page + 1
         previous_page = page - 1

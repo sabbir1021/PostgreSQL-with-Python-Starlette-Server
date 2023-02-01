@@ -33,16 +33,13 @@ def view_all(sql, table, page_size=None, page=None, search=None, search_fields=N
    
    # Error check
    if pagination_data.get('status') !=200:
+      conn.close()
       return pagination_data
-
    sql = sql+pagination_data.get('query')
 
-
-   print(sql)
-   # Query
+   # Main Query
    cursor.execute(sql)
    all_data = cursor.fetchall()
-
    
    data = {}
    meta_data = {
