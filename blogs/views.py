@@ -299,7 +299,14 @@ async def blog_retrieve_update(request):
             where blogs_tags.blog = blogs.id
             ) AS tags,
 
-            (SELECT json_agg(json_build_object('id', blog_comment.id,'name', blog_comment.name, 'email', blog_comment.email  , 'comment', blog_comment.comment))
+            (SELECT json_agg(json_build_object('id', blog_comment.id,'name', blog_comment.name, 'email', blog_comment.email  , 'comment', blog_comment.comment, 'reply',
+               
+                (SELECT json_agg(json_build_object('id', blog_comment_reply.id,'name', blog_comment_reply.name, 'email', blog_comment_reply.email  , 'comment', blog_comment_reply.comment))
+                FROM blog_comment_reply
+                where blog_comment_reply.comment_id = blog_comment.id
+                )
+                
+            ))
             FROM blog_comment
             where blog_comment.blog = blogs.id
             ) AS comments
