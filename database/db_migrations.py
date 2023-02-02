@@ -80,15 +80,22 @@ cursor.execute("""
     """)
 
 
-# cursor.execute("""
-#         CREATE TABLE IF NOT EXISTS blog_comment_reply (
-#             id BIGINT,
-#             username VARCHAR(50),
-#             phone VARCHAR(50),
-#             email VARCHAR(50),
-#             PRIMARY KEY (id)
-#         );
-#     """)
+cursor.execute("""
+        CREATE TABLE IF NOT EXISTS blog_comment_reply (
+            id SERIAL NOT NULL PRIMARY KEY,
+            blog INT NOT NULL,
+            comment_id INT NOT NULL,
+            name VARCHAR(50),
+            phone VARCHAR(50),
+            email VARCHAR(50),
+            comment text NOT NULL,
+            created_at timestamp with time zone DEFAULT now(),
+            show_in BOOLEAN NOT NULL DEFAULT TRUE,
+            
+            CONSTRAINT fk_blog FOREIGN KEY(blog) REFERENCES blogs(id),
+            CONSTRAINT fk_comment_id FOREIGN KEY(comment_id) REFERENCES blog_comment(id)
+        );
+    """)
 
 
 

@@ -223,7 +223,14 @@ async def blog_create_list(request):
             where blogs_tags.blog = blogs.id
             ) AS tags,
 
-            (SELECT json_agg(json_build_object('id', blog_comment.id,'name', blog_comment.name, 'email', blog_comment.email  , 'comment', blog_comment.comment))
+            (SELECT json_agg(json_build_object('id', blog_comment.id,'name', blog_comment.name, 'email', blog_comment.email  , 'comment', blog_comment.comment, 'reply',
+               
+                (SELECT json_agg(json_build_object('id', blog_comment_reply.id,'name', blog_comment_reply.name, 'email', blog_comment_reply.email  , 'comment', blog_comment_reply.comment))
+                FROM blog_comment_reply
+                where blog_comment_reply.comment_id = blog_comment.id
+                )
+                
+            ))
             FROM blog_comment
             where blog_comment.blog = blogs.id
             ) AS comments
@@ -339,15 +346,28 @@ async def blog_retrieve_update(request):
 async def blog_comment_create(request):
     if request.method == "POST":
         request_data = await request.json()
-        blog = request_data.get('blog')
-        name = request_data.get('name')
-        phone = request_data.get('phone')
-        email = request_data.get('email')
-        comment = request_data.get('comment')
-        
-        values = (blog, name, phone, email, comment)
-        query = """INSERT INTO blog_comment(blog, name, phone, email, comment) VALUES (%s,%s,%s,%s,%s) RETURNING id, blog, name, phone, email, comment"""
-        data = create(query, values)
+        if request_data.get('comment_id'):
+            blog = request_data.get('blog')
+            comment_id = request_data.get('comment_id')
+            name = request_data.get('name')
+            phone = request_data.get('phone')
+            email = request_data.get('email')
+            comment = request_data.get('comment')
+            
+            values = (blog, comment_id, name, phone, email, comment)
+            query = """INSERT INTO blog_comment_reply(blog, comment_id, name, phone, email, comment) VALUES (%s,%s,%s,%s,%s,%s) RETURNING id, blog, comment_id, name, phone, email, comment"""
+            data = create(query, values)
+
+        else:
+            blog = request_data.get('blog')
+            name = request_data.get('name')
+            phone = request_data.get('phone')
+            email = request_data.get('email')
+            comment = request_data.get('comment')
+            
+            values = (blog, name, phone, email, comment)
+            query = """INSERT INTO blog_comment(blog, name, phone, email, comment) VALUES (%s,%s,%s,%s,%s) RETURNING id, blog, name, phone, email, comment"""
+            data = create(query, values)
        
 
     return JSONResponse(data, status_code=200)
