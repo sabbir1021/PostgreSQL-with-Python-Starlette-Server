@@ -202,7 +202,8 @@ async def blog_tag_retrieve_update(request):
     return JSONResponse(data, status_code=200)
 
 
-# Blog 
+# Blog
+
 
 async def blog_create_list(request):
     if request.method == "GET":
@@ -210,16 +211,24 @@ async def blog_create_list(request):
         page = request.query_params.get('page')
         search = request.query_params.get('search')
         search_fields = ['title']
-        created_by = request.query_params.get('created_by')
-        filter_fields = {'created_by': created_by}
+        # created_by = request.query_params.get('created_by')
+        # filter_fields = {'created_by': created_by}
         
         query = """select blogs.id, blogs.title, blogs.description, blogs.thumbnail, TO_CHAR(blogs.publish_date, 'YYYY-MM-DD HH24:MI:SS') as publish_date, blogs.show_in, blog_categories.id as category_id, blog_categories.name as category_name, users.id as created_by_id,
-            users.username as created_by_username, users.email as created_by_email, users.phone as created_by_phone
+            users.username as created_by_username, users.email as created_by_email, users.phone as created_by_phone, 
+            
+            (SELECT json_agg(json_build_object('id', blog_tags.id,'name', blog_tags.name))
+            FROM blogs_tags
+            INNER JOIN blog_tags ON blogs_tags.tag = blog_tags.id
+            where blogs_tags.blog = blogs.id
+            ) AS tags
+
             from blogs
             inner join users on blogs.created_by = users.id
-            inner join blog_categories on blogs.category = blog_categories.id"""
+            inner join blog_categories on blogs.category = blog_categories.id
+            """
         table = "blogs"
-        data = view_all(query, table, page_size, page, search, search_fields, filter_fields)
+        data = view_all(query, table, page_size, page, search, search_fields)
         
         if data.get('status') != 200:
             data.pop('status')

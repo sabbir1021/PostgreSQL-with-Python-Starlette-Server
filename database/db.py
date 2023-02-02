@@ -42,7 +42,9 @@ def view_all(sql, table, page_size=None, page=None, search=None, search_fields=N
       conn.close()
       return pagination_data
    sql = sql+pagination_data.get('query')
-   print(sql)
+
+   # Ordered
+   sql = sql+ " ORDER BY id DESC "
 
    # Main Query
    cursor.execute(sql)
