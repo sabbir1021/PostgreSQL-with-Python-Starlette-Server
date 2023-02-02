@@ -64,15 +64,20 @@ cursor.execute("""
         );
     """)
 
-# cursor.execute("""
-#         CREATE TABLE IF NOT EXISTS blog_comment (
-#             id BIGINT NOT NULL AUTO_INCREMENT,,
-#             username VARCHAR(50),
-#             phone VARCHAR(50),
-#             email VARCHAR(50),
-#             PRIMARY KEY (id)
-#         );
-#     """)
+cursor.execute("""
+        CREATE TABLE IF NOT EXISTS blog_comment (
+            id SERIAL NOT NULL PRIMARY KEY,
+            blog INT NOT NULL,
+            name VARCHAR(50),
+            phone VARCHAR(50),
+            email VARCHAR(50),
+            comment text NOT NULL,
+            created_at timestamp with time zone DEFAULT now(),
+            show_in BOOLEAN NOT NULL DEFAULT TRUE,
+            
+            CONSTRAINT fk_blog FOREIGN KEY(blog) REFERENCES blogs(id)
+        );
+    """)
 
 
 # cursor.execute("""

@@ -221,7 +221,12 @@ async def blog_create_list(request):
             FROM blogs_tags
             INNER JOIN blog_tags ON blogs_tags.tag = blog_tags.id
             where blogs_tags.blog = blogs.id
-            ) AS tags
+            ) AS tags,
+
+            (SELECT json_agg(json_build_object('id', blog_comment.id,'name', blog_comment.name, 'email', blog_comment.email  , 'comment', blog_comment.comment))
+            FROM blog_comment
+            where blog_comment.blog = blogs.id
+            ) AS comments
 
             from blogs
             inner join users on blogs.created_by = users.id
@@ -279,7 +284,19 @@ async def blog_retrieve_update(request):
     if request.method == "GET":
         blog_id = request.path_params['blog_id']
         query = """select  blogs.id, blogs.title, blogs.description, blogs.thumbnail, TO_CHAR(blogs.publish_date, 'YYYY-MM-DD HH24:MI:SS') as publish_date, blogs.show_in, blog_categories.id as category_id, blog_categories.name as category_name, users.id as created_by_id,
-            users.username as created_by_username, users.email as created_by_email, users.phone as created_by_phone
+            users.username as created_by_username, users.email as created_by_email, users.phone as created_by_phone,
+
+            (SELECT json_agg(json_build_object('id', blog_tags.id,'name', blog_tags.name))
+            FROM blogs_tags
+            INNER JOIN blog_tags ON blogs_tags.tag = blog_tags.id
+            where blogs_tags.blog = blogs.id
+            ) AS tags,
+
+            (SELECT json_agg(json_build_object('id', blog_comment.id,'name', blog_comment.name, 'email', blog_comment.email  , 'comment', blog_comment.comment))
+            FROM blog_comment
+            where blog_comment.blog = blogs.id
+            ) AS comments
+
             from blogs
             inner join users on blogs.created_by = users.id
             inner join blog_categories on blogs.category = blog_categories.id
@@ -312,4 +329,25 @@ async def blog_retrieve_update(request):
         sql_text = f"UPDATE blogs SET {change_data[0:-2]} WHERE blogs.id = {blog_id};"
         data = update("""{}""".format(sql_text))
     
+    return JSONResponse(data, status_code=200)
+
+
+
+
+# Blog Comments
+
+async def blog_comment_create(request):
+    if request.method == "POST":
+        request_data = await request.json()
+        blog = request_data.get('blog')
+        name = request_data.get('name')
+        phone = request_data.get('phone')
+        email = request_data.get('email')
+        comment = request_data.get('comment')
+        
+        values = (blog, name, phone, email, comment)
+        query = """INSERT INTO blog_comment(blog, name, phone, email, comment) VALUES (%s,%s,%s,%s,%s) RETURNING id, blog, name, phone, email, comment"""
+        data = create(query, values)
+       
+
     return JSONResponse(data, status_code=200)
