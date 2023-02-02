@@ -257,10 +257,21 @@ async def blog_create_list(request):
         created_by = request_data.get('created_by')
         show_in = request_data.get('show_in')
         publish_date = request_data.get('publish_date')
-        
+        tags = request_data.get('tags')
         values = (title, description, thumbnail, category, created_by, show_in, publish_date)
         query = """INSERT INTO blogs(title, description, thumbnail, category, created_by, show_in, publish_date) VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id, title, description, thumbnail"""
         data = create(query, values)
+        
+        for i in tags:
+            blog_id = data.get('data').get('id')
+            print(blog_id)
+            values = (blog_id, i)
+            query = """INSERT INTO blogs_tags(blog, tag) VALUES (%s,%s) RETURNING id, blog, tag"""
+            tag_data = create(query, values)
+            print(tag_data)
+
+       
+
     return JSONResponse(data, status_code=200)
 
 
