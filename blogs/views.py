@@ -2,6 +2,7 @@ from starlette.responses import JSONResponse
 from starlette.responses import Response
 from database.db import view_all, view_details, create, update
 import json
+from base.utils import has_password
 
 
 async def homepage(request):
@@ -10,6 +11,19 @@ async def homepage(request):
     }
     return JSONResponse({'data': data})
 
+async def login(request):
+    if request.method == "POST":
+        request_data = await request.json()
+        username = request_data.get('username')
+        password = request_data.get('password')
+        
+        data = {"message": f"Login faild {username}"}
+        return JSONResponse({'data': data})
+
+    data = {"message": "Login faild"}
+    return JSONResponse({'data': data})
+
+
 
 async def user_create_list(request):
     if request.method == "GET":
@@ -17,7 +31,7 @@ async def user_create_list(request):
         page = request.query_params.get('page')
         search = request.query_params.get('search')
         search_fields = ['username', 'email']
-        query = """select * from users"""
+        query = """select users.id, users.username, users.phone, users.email from users"""
         table = "users"
         data = view_all(query, table, page_size, page, search, search_fields)
         if data.get('status') != 200:
@@ -30,8 +44,12 @@ async def user_create_list(request):
         username = request_data.get('username')
         phone = request_data.get('phone')
         email = request_data.get('email')
-        values = (username, phone, email)
-        query = """INSERT INTO users(username, phone, email) VALUES (%s,%s,%s) RETURNING id, username, phone, email"""
+        password = has_password(request_data.get('password'))
+        print(password)
+
+
+        values = (username, phone, email, password)
+        query = """INSERT INTO users(username, phone, email, password) VALUES (%s,%s,%s,%s) RETURNING id, username, phone, email, password"""
         data = create(query, values)
         return JSONResponse(data, status_code=201)
     

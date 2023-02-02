@@ -2,6 +2,7 @@ from starlette.routing import Route
 from starlette.applications import Starlette
 from blogs.views import (
     homepage, 
+    login,
     user_create_list, 
     user_retrieve_update, 
     blog_category_create_list, 
@@ -15,6 +16,8 @@ from blogs.views import (
 
 blog_app = [
     Route('/hello', homepage, methods=["GET"]),
+    Route('/login', login, methods=["POST"]),
+
     Route('/users', user_create_list, methods=["GET", "POST"]),
     Route('/user/{user_id:int}', user_retrieve_update, methods=["GET", "PATCH"]),
 

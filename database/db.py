@@ -81,6 +81,7 @@ def view_details(sql, data_type='all'):
 def create(query, values):
    conn = db_connect()
    cursor = conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
+   print(query, values)
    try:
       cursor.execute(query, values)
       data = cursor.fetchone()
