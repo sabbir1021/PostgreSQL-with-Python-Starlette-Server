@@ -104,6 +104,7 @@ cursor.execute("""
 cursor.execute("""
         CREATE TABLE IF NOT EXISTS user_token (
             user_id INT NOT NULL,
+            token_id text NOT NULL,
             token text NOT NULL,
             valid_time timestamp with time zone,
             CONSTRAINT fk_user_id FOREIGN KEY(user_id) REFERENCES users(id)
