@@ -11,12 +11,7 @@ async def homepage(request):
     }
     return JSONResponse({'data': data})
 
-# def login_required(fn):
-#     def inner(*args, **kwargs):
-#         return fn(*args, **kwargs)
-#     return inner
 
-# @login_required
 async def user_create_list(request):
     if request.method == "GET":
         page_size = request.query_params.get('page_size')
