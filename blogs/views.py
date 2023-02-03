@@ -11,20 +11,6 @@ async def homepage(request):
     }
     return JSONResponse({'data': data})
 
-async def login(request):
-    if request.method == "POST":
-        request_data = await request.json()
-        username = request_data.get('username')
-        password = request_data.get('password')
-        
-        data = {"message": f"Login faild {username}"}
-        return JSONResponse({'data': data})
-
-    data = {"message": "Login faild"}
-    return JSONResponse({'data': data})
-
-
-
 async def user_create_list(request):
     if request.method == "GET":
         page_size = request.query_params.get('page_size')
@@ -45,9 +31,6 @@ async def user_create_list(request):
         phone = request_data.get('phone')
         email = request_data.get('email')
         password = has_password(request_data.get('password'))
-        print(password)
-
-
         values = (username, phone, email, password)
         query = """INSERT INTO users(username, phone, email, password) VALUES (%s,%s,%s,%s) RETURNING id, username, phone, email, password"""
         data = create(query, values)
