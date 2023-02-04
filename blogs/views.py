@@ -2,7 +2,7 @@ from starlette.responses import JSONResponse
 from starlette.responses import Response
 from database.db import view_all, view_details, create, update
 import json
-from base.utils import has_password
+from base.utils import has_password, is_authenticated
 
 
 async def homepage(request):
@@ -11,33 +11,41 @@ async def homepage(request):
     }
     return JSONResponse({'data': data})
 
+# def login_required(fn):
+#     def inner(*args, **kwargs):
+#         return fn(*args, **kwargs)
+#     return inner
 
+# @login_required
 async def user_create_list(request):
-    if request.method == "GET":
-        page_size = request.query_params.get('page_size')
-        page = request.query_params.get('page')
-        search = request.query_params.get('search')
-        search_fields = ['username', 'email']
-        query = """select users.id, users.username, users.phone, users.email from users"""
-        table = "users"
-        data = view_all(query, table, page_size, page, search, search_fields)
-        if data.get('status') != 200:
-            return JSONResponse(data, status_code=400)
-        else:
-            return JSONResponse(data, status_code=200)
+    auth_token = request.headers.get('auth_token')
+    if is_authenticated(auth_token):
+        if request.method == "GET":
+            page_size = request.query_params.get('page_size')
+            page = request.query_params.get('page')
+            search = request.query_params.get('search')
+            search_fields = ['username', 'email']
+            query = """select users.id, users.username, users.phone, users.email from users"""
+            table = "users"
+            data = view_all(query, table, page_size, page, search, search_fields)
+            if data.get('status') != 200:
+                return JSONResponse(data, status_code=400)
+            else:
+                return JSONResponse(data, status_code=200)
 
-    if request.method == "POST":
-        request_data = await request.json()
-        username = request_data.get('username')
-        phone = request_data.get('phone')
-        email = request_data.get('email')
-        password = has_password(request_data.get('password'))
-        values = (username, phone, email, password)
-        query = """INSERT INTO users(username, phone, email, password) VALUES (%s,%s,%s,%s) RETURNING id, username, phone, email, password"""
-        data = create(query, values)
-        return JSONResponse(data, status_code=201)
+        if request.method == "POST":
+            request_data = await request.json()
+            username = request_data.get('username')
+            phone = request_data.get('phone')
+            email = request_data.get('email')
+            password = has_password(request_data.get('password'))
+            values = (username, phone, email, password)
+            query = """INSERT INTO users(username, phone, email, password) VALUES (%s,%s,%s,%s) RETURNING id, username, phone, email, password"""
+            data = create(query, values)
+            return JSONResponse(data, status_code=201)
+    else:
+        return JSONResponse({'message': "you are not authorized"}, status_code=403)
     
-    # return JSONResponse(data)
 
 
 async def user_retrieve_update(request):

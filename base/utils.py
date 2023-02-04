@@ -15,7 +15,8 @@ def has_password(value):
 
 def token_generate(username):
     token_id = str(uuid.uuid1())
-    valid_time = datetime.datetime.now() + timedelta(hours=1)
+    valid_time = datetime.datetime.now() + timedelta(minutes=1)
+    print(valid_time)
 
     user = view_details("""select id, username, phone, email, first_name, last_name from users WHERE users.username = '{}';""".format(username)).get('data')
     
@@ -34,3 +35,22 @@ def token_generate(username):
     else:
         data = data.get('data').get('token')
     return data
+
+
+def token_validation_check(token):
+    token_bytes = token.encode("ascii")
+    token_bytes_data = base64.b64decode(token_bytes)
+    token_data = token_bytes_data.decode("ascii")
+    token_dict_data = json.loads(token_data)    
+    if datetime.datetime.now() <= datetime.datetime.strptime(token_dict_data.get('valid_time'), '%Y-%m-%d %H:%M:%S.%f'):
+        return True
+    else:
+        return False
+
+def is_authenticated(token):
+    token = token
+    valid = token_validation_check(token)
+    if valid:
+        return True
+    else:
+        return False
